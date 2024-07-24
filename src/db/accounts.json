@@ -1,0 +1,24 @@
+{
+  "accounts": [
+    {
+      "name": "Phuc Ngo",
+      "email": "alice.johnson@example.com",
+      "status": "Active",
+      "id": "3"
+    },
+    {
+      "id": "91ad",
+      "name": "ngotranbaophuc",
+      "email": "phuc@gmail.com",
+      "password": "123456",
+      "status": "Active"
+    },
+    {
+      "id": "76cd",
+      "name": "qưeqwe",
+      "email": "pppp@gmail.com",
+      "password": "123456",
+      "status": "Active"
+    }
+  ]
+}
