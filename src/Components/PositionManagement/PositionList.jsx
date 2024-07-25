@@ -32,7 +32,7 @@ const PositionList = () => {
             const results = positions.filter(position =>
                 position.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 position.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                position.status.toLowerCase().includes(searchTerm.toLowerCase())
+                (position.tags && position.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
             );
             setFilteredPositions(results);
         }
@@ -80,6 +80,11 @@ const PositionList = () => {
         setFilteredPositions(storedPositions);
     };
 
+    const getRandomColor = () => {
+        const colors = ['magenta', 'red', 'volcano', 'orange', 'gold', 'lime', 'green', 'cyan', 'blue', 'geekblue', 'purple'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    };
+
     const columns = [
         {
             title: 'Name',
@@ -93,13 +98,17 @@ const PositionList = () => {
             key: 'description',
         },
         {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            render: status => (
-                <Tag color={status === 'Active' ? 'green' : 'volcano'} key={status}>
-                    {status.toUpperCase()}
-                </Tag>
+            title: 'Tags',
+            dataIndex: 'tags',
+            key: 'tags',
+            render: tags => (
+                <>
+                    {tags && tags.map(tag => (
+                        <Tag color={getRandomColor()} key={tag}>
+                            {tag.toUpperCase()}
+                        </Tag>
+                    ))}
+                </>
             ),
         },
         {

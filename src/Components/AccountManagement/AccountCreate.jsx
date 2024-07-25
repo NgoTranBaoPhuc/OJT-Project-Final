@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, message, Switch } from 'antd';
 
 const AccountCreate = ({ onCreate }) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
+    const [status, setStatus] = useState(true); // Default status to 'Active'
 
     const handleFinish = (values) => {
         setLoading(true);
         const storedAccounts = JSON.parse(localStorage.getItem('accounts')) || [];
-        const newAccount = { ...values, status: 'Active', id: Date.now().toString() };
+        const newAccount = { ...values, status: status ? 'Active' : 'Inactive', id: Date.now().toString() };
         storedAccounts.push(newAccount);
         localStorage.setItem('accounts', JSON.stringify(storedAccounts));
         message.success('Account created successfully');
         form.resetFields();
         onCreate();
         setLoading(false);
+    };
+
+    const handleStatusChange = (checked) => {
+        setStatus(checked);
     };
 
     return (
@@ -46,6 +51,11 @@ const AccountCreate = ({ onCreate }) => {
                 rules={[{ required: true, message: 'Please enter the password' }]}
             >
                 <Input.Password />
+            </Form.Item>
+            <Form.Item
+                label="Status"
+            >
+                <Switch checkedChildren="Active" unCheckedChildren="Inactive" defaultChecked onChange={handleStatusChange} />
             </Form.Item>
             <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>

@@ -2,24 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Select, message } from 'antd';
 
 const { Option } = Select;
+const { TextArea } = Input;
 
 const PositionEdit = ({ position, onUpdate, onCancel }) => {
     const [form] = Form.useForm();
+    const [tags, setTags] = useState([]);
 
     useEffect(() => {
         if (position) {
             form.setFieldsValue(position);
+            setTags(position.tags || []);
         }
     }, [position, form]);
 
     const onFinish = (values) => {
+        if (tags.length === 0) {
+            message.error('Please select at least one tag.');
+            return;
+        }
+        if (tags.length > 3) {
+            message.error('You can select up to 3 tags only.');
+            return;
+        }
         const storedPositions = JSON.parse(localStorage.getItem('positions'));
         const updatedPositions = storedPositions.map(pos =>
-            pos.id === position.id ? { ...pos, ...values } : pos
+            pos.id === position.id ? { ...pos, ...values, tags } : pos
         );
         localStorage.setItem('positions', JSON.stringify(updatedPositions));
         message.success('Position updated successfully');
         onUpdate();
+    };
+
+    const handleTagChange = (value) => {
+        setTags(value);
     };
 
     return (
@@ -40,16 +55,18 @@ const PositionEdit = ({ position, onUpdate, onCancel }) => {
                 label="Description"
                 rules={[{ required: true, message: 'Please input the description!' }]}
             >
-                <Input />
+                <TextArea rows={4} />
             </Form.Item>
             <Form.Item
-                name="status"
-                label="Status"
-                rules={[{ required: true, message: 'Please select a status!' }]}
+                name="tags"
+                label="Tags"
             >
-                <Select>
-                    <Option value="Active">Active</Option>
-                    <Option value="Inactive">Inactive</Option>
+                <Select mode="tags" value={tags} onChange={handleTagChange}>
+                    <Option value="C#">C#</Option>
+                    <Option value="C++">C++</Option>
+                    <Option value="JavaScript">JavaScript</Option>
+                    <Option value="Python">Python</Option>
+                    <Option value="Java">Java</Option>
                 </Select>
             </Form.Item>
             <Form.Item>
