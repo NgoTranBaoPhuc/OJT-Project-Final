@@ -3,6 +3,7 @@ html,
 #root {
   height: 100%;
   margin: 0;
+
 }
 
 .ant-layout {
@@ -13,7 +14,7 @@ html,
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 100vw;
+  width: 70vw;
   /* Ensure the content takes the full viewport width */
   padding: 0;
   /* Remove any padding */

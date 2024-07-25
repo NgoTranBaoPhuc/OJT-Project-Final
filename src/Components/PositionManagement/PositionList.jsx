@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Space, Tag, Modal, message } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import PositionEdit from './PositionEdit';
 import PositionCreate from './PositionCreate';
 
@@ -85,6 +85,15 @@ const PositionList = () => {
         return colors[Math.floor(Math.random() * colors.length)];
     };
 
+    const tagFilters = [
+        'C#', 'C++', 'Python', 'JAVASCRIPT'
+    ].map(tag => ({ text: tag, value: tag }));
+
+    const statusFilters = [
+        { text: 'Active', value: 'Active' },
+        { text: 'Inactive', value: 'Inactive' }
+    ];
+
     const columns = [
         {
             title: 'Name',
@@ -101,6 +110,8 @@ const PositionList = () => {
             title: 'Tags',
             dataIndex: 'tags',
             key: 'tags',
+            filters: tagFilters,
+            onFilter: (value, record) => record.tags.includes(value),
             render: tags => (
                 <>
                     {tags && tags.map(tag => (
@@ -109,6 +120,18 @@ const PositionList = () => {
                         </Tag>
                     ))}
                 </>
+            ),
+        },
+        {
+            title: 'Status',
+            dataIndex: 'status',
+            key: 'status',
+            filters: statusFilters,
+            onFilter: (value, record) => record.status === value,
+            render: status => (
+                <Tag color={status === 'Active' ? 'green' : 'volcano'} key={status}>
+                    {status ? status.toUpperCase() : ''}
+                </Tag>
             ),
         },
         {

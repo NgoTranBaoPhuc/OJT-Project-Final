@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Select, message } from 'antd';
+import { Form, Input, Button, Select, Switch, message } from 'antd';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -8,6 +8,7 @@ const PositionCreate = ({ onCreate }) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [tags, setTags] = useState([]);
+    const [isActive, setIsActive] = useState(true);
 
     const handleFinish = (values) => {
         if (tags.length === 0) {
@@ -20,7 +21,7 @@ const PositionCreate = ({ onCreate }) => {
         }
         setLoading(true);
         const storedPositions = JSON.parse(localStorage.getItem('positions')) || [];
-        const newPosition = { ...values, tags, id: Date.now().toString() };
+        const newPosition = { ...values, tags, id: Date.now().toString(), status: isActive ? 'Active' : 'Inactive' };
         storedPositions.push(newPosition);
         localStorage.setItem('positions', JSON.stringify(storedPositions));
         message.success('Position created successfully');
@@ -65,6 +66,12 @@ const PositionCreate = ({ onCreate }) => {
                     <Option value="Python">Python</Option>
                     <Option value="Java">Java</Option>
                 </Select>
+            </Form.Item>
+            <Form.Item
+                name="status"
+                label="Status"
+            >
+                <Switch checkedChildren="Active" unCheckedChildren="Inactive" checked={isActive} onChange={setIsActive} />
             </Form.Item>
             <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>

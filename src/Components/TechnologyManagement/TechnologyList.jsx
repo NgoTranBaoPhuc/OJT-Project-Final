@@ -1,58 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Space, Tag, Modal, message } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
-import AccountEdit from './AccountEdit';
-import AccountCreate from './AccountCreate';
+import TechnologyEdit from './TechnologyEdit';
+import TechnologyCreate from './TechnologyCreate';
 
 const { Search } = Input;
 
-const AccountList = () => {
-    const [accounts, setAccounts] = useState([]);
-    const [filteredAccounts, setFilteredAccounts] = useState([]);
+const TechnologyList = () => {
+    const [technologies, setTechnologies] = useState([]);
+    const [filteredTechnologies, setFilteredTechnologies] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [editingAccount, setEditingAccount] = useState(null);
+    const [editingTechnology, setEditingTechnology] = useState(null);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
     useEffect(() => {
-        const fetchAccounts = () => {
-            const storedAccounts = localStorage.getItem('accounts');
-            if (storedAccounts) {
-                const parsedAccounts = JSON.parse(storedAccounts);
-                setAccounts(parsedAccounts);
-                setFilteredAccounts(parsedAccounts);
+        const fetchTechnologies = () => {
+            const storedTechnologies = localStorage.getItem('technologies');
+            if (storedTechnologies) {
+                const parsedTechnologies = JSON.parse(storedTechnologies);
+                setTechnologies(parsedTechnologies);
+                setFilteredTechnologies(parsedTechnologies);
             }
         };
 
-        fetchAccounts();
+        fetchTechnologies();
     }, []);
 
     useEffect(() => {
-        if (accounts.length > 0) {
-            const results = accounts.filter(account =>
-                account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                account.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                account.status.toLowerCase().includes(searchTerm.toLowerCase())
+        if (technologies.length > 0) {
+            const results = technologies.filter(technology =>
+                technology.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                technology.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (technology.tags && technology.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
             );
-            setFilteredAccounts(results);
+            setFilteredTechnologies(results);
         }
-    }, [searchTerm, accounts]);
+    }, [searchTerm, technologies]);
 
-    const saveAccounts = (accounts) => {
-        localStorage.setItem('accounts', JSON.stringify(accounts));
+    const saveTechnologies = (technologies) => {
+        localStorage.setItem('technologies', JSON.stringify(technologies));
     };
 
     const handleEdit = (record) => {
-        setEditingAccount(record);
+        setEditingTechnology(record);
         setIsEditModalVisible(true);
     };
 
     const handleDelete = (record) => {
-        const updatedAccounts = accounts.filter(account => account.id !== record.id);
-        setAccounts(updatedAccounts);
-        setFilteredAccounts(updatedAccounts);
-        saveAccounts(updatedAccounts);
-        message.success('Account deleted successfully');
+        const updatedTechnologies = technologies.filter(technology => technology.id !== record.id);
+        setTechnologies(updatedTechnologies);
+        setFilteredTechnologies(updatedTechnologies);
+        saveTechnologies(updatedTechnologies);
+        message.success('Technology deleted successfully');
     };
 
     const handleCreate = () => {
@@ -61,30 +61,30 @@ const AccountList = () => {
 
     const handleUpdate = () => {
         setIsEditModalVisible(false);
-        setEditingAccount(null);
-        const storedAccounts = JSON.parse(localStorage.getItem('accounts'));
-        setAccounts(storedAccounts);
-        setFilteredAccounts(storedAccounts);
+        setEditingTechnology(null);
+        const storedTechnologies = JSON.parse(localStorage.getItem('technologies'));
+        setTechnologies(storedTechnologies);
+        setFilteredTechnologies(storedTechnologies);
     };
 
     const handleCancel = () => {
         setIsEditModalVisible(false);
         setIsCreateModalVisible(false);
-        setEditingAccount(null);
+        setEditingTechnology(null);
     };
 
     const handleCreateSuccess = () => {
         setIsCreateModalVisible(false);
-        const storedAccounts = JSON.parse(localStorage.getItem('accounts'));
-        setAccounts(storedAccounts);
-        setFilteredAccounts(storedAccounts);
+        const storedTechnologies = JSON.parse(localStorage.getItem('technologies'));
+        setTechnologies(storedTechnologies);
+        setFilteredTechnologies(storedTechnologies);
     };
 
-    const getColumnSearchProps = dataIndex => ({
+    const getColumnSearchProps = (dataIndex) => ({
         filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
             <div style={{ padding: 8 }}>
                 <Input
-                    placeholder={`Search  ${dataIndex} `}
+                    placeholder={`Search ${dataIndex}`}
                     value={selectedKeys[0]}
                     onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                     onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
@@ -108,13 +108,9 @@ const AccountList = () => {
         ),
         filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
         onFilter: (value, record) =>
-            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
-        onFilterDropdownVisibleChange: visible => {
-            if (visible) {
-                setTimeout(() => this.searchInput.select(), 100);
-            }
-        },
-        render: text => text,
+            record[dataIndex]
+                ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+                : '',
     });
 
     const handleSearch = (selectedKeys, confirm, dataIndex) => {
@@ -122,7 +118,7 @@ const AccountList = () => {
         setSearchTerm(selectedKeys[0]);
     };
 
-    const handleReset = clearFilters => {
+    const handleReset = (clearFilters) => {
         clearFilters();
         setSearchTerm('');
     };
@@ -132,28 +128,57 @@ const AccountList = () => {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
+            render: text => <a>{text}</a>,
 
         },
         {
-            title: 'Email',
-            dataIndex: 'email',
-            key: 'email',
-            ...getColumnSearchProps('email'),
+            title: 'Description',
+            dataIndex: 'description',
+            key: 'description',
+
+        },
+        {
+            title: 'Tags',
+            dataIndex: 'tags',
+            key: 'tags',
+            render: tags => (
+                <>
+                    {tags.map(tag => (
+                        <Tag color={tag.length > 5 ? 'geekblue' : 'green'} key={tag}>
+                            {tag.toUpperCase()}
+                        </Tag>
+                    ))}
+                </>
+            ),
+            filters: [
+                { text: 'React Native', value: 'React Native' },
+                { text: 'Flutter', value: 'Flutter' },
+                { text: 'Ionic', value: 'Ionic' },
+                { text: 'Cordova', value: 'Cordova' },
+                { text: 'MySQL', value: 'MySQL' },
+                { text: 'Postgres', value: 'Postgres' },
+                { text: 'SQLite', value: 'SQLite' },
+                { text: 'Neo4J', value: 'Neo4J' },
+                { text: 'Amazon (AWS)', value: 'Amazon (AWS)' },
+                { text: 'Google (Google Cloud Platform, Firebase)', value: 'Google (Google Cloud Platform, Firebase)' },
+                { text: 'Microsoft (Azure)', value: 'Microsoft (Azure)' },
+            ],
+            onFilter: (value, record) => record.tags.includes(value),
         },
         {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            filters: [
-                { text: 'Active', value: 'Active' },
-                { text: 'Inactive', value: 'Inactive' },
-            ],
-            onFilter: (value, record) => record.status.indexOf(value) === 0,
             render: status => (
                 <Tag color={status === 'Active' ? 'green' : 'volcano'} key={status}>
                     {status.toUpperCase()}
                 </Tag>
             ),
+            filters: [
+                { text: 'Active', value: 'Active' },
+                { text: 'Inactive', value: 'Inactive' },
+            ],
+            onFilter: (value, record) => record.status.indexOf(value) === 0,
         },
         {
             title: 'Action',
@@ -187,36 +212,36 @@ const AccountList = () => {
                 onClick={handleCreate}
                 style={{ marginBottom: 16 }}
             >
-                Create Account
+                Create Technology
             </Button>
             <Search
-                placeholder="Search accounts"
+                placeholder="Search technologies"
                 onChange={e => setSearchTerm(e.target.value)}
                 style={{ marginBottom: 16 }}
             />
-            <Table columns={columns} dataSource={filteredAccounts} rowKey="id" pagination={{ pageSize: 7 }} />
+            <Table columns={columns} dataSource={filteredTechnologies} rowKey="id" pagination={{ pageSize: 7 }} />
             <Modal
-                title="Edit Account"
+                title="Edit Technology"
                 visible={isEditModalVisible}
                 footer={null}
                 onCancel={handleCancel}
             >
-                <AccountEdit
-                    account={editingAccount}
+                <TechnologyEdit
+                    technology={editingTechnology}
                     onUpdate={handleUpdate}
                     onCancel={handleCancel}
                 />
             </Modal>
             <Modal
-                title="Create Account"
+                title="Create Technology"
                 visible={isCreateModalVisible}
                 footer={null}
                 onCancel={handleCancel}
             >
-                <AccountCreate onCreate={handleCreateSuccess} />
+                <TechnologyCreate onCreate={handleCreateSuccess} />
             </Modal>
         </div>
     );
 };
 
-export default AccountList;
+export default TechnologyList;
