@@ -7,7 +7,7 @@ const { Sider } = Layout;
 
 const Sidebar = () => {
     return (
-        <Sider>
+        <Sider width={200} style={{ height: '100vh', position: 'fixed', left: 0 }}>
             <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
                 <Menu.Item key="1" icon={<UserOutlined />}>
                     <Link to="/accounts">Accounts</Link>

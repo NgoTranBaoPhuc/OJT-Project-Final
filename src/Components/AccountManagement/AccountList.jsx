@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Space, Tag, Modal, message } from 'antd';
-import axios from 'axios';
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import AccountEdit from './AccountEdit';
 import AccountCreate from './AccountCreate';
@@ -16,13 +15,12 @@ const AccountList = () => {
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
     useEffect(() => {
-        const fetchAccounts = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/accounts');
-                setAccounts(response.data);
-                setFilteredAccounts(response.data);
-            } catch (error) {
-                console.error('Error fetching accounts:', error);
+        const fetchAccounts = () => {
+            const storedAccounts = localStorage.getItem('accounts');
+            if (storedAccounts) {
+                const parsedAccounts = JSON.parse(storedAccounts);
+                setAccounts(parsedAccounts);
+                setFilteredAccounts(parsedAccounts);
             }
         };
 
@@ -40,22 +38,21 @@ const AccountList = () => {
         }
     }, [searchTerm, accounts]);
 
+    const saveAccounts = (accounts) => {
+        localStorage.setItem('accounts', JSON.stringify(accounts));
+    };
+
     const handleEdit = (record) => {
         setEditingAccount(record);
         setIsEditModalVisible(true);
     };
 
-    const handleDelete = async (record) => {
-        try {
-            await axios.delete(`http://localhost:5000/accounts/${record.id}`);
-            message.success('Account deleted successfully');
-            const updatedAccounts = accounts.filter(account => account.id !== record.id);
-            setAccounts(updatedAccounts);
-            setFilteredAccounts(updatedAccounts);
-        } catch (error) {
-            console.error('Error deleting account:', error);
-            message.error('Failed to delete account');
-        }
+    const handleDelete = (record) => {
+        const updatedAccounts = accounts.filter(account => account.id !== record.id);
+        setAccounts(updatedAccounts);
+        setFilteredAccounts(updatedAccounts);
+        saveAccounts(updatedAccounts);
+        message.success('Account deleted successfully');
     };
 
     const handleCreate = () => {
@@ -65,10 +62,9 @@ const AccountList = () => {
     const handleUpdate = () => {
         setIsEditModalVisible(false);
         setEditingAccount(null);
-        axios.get('http://localhost:5000/accounts').then((response) => {
-            setAccounts(response.data);
-            setFilteredAccounts(response.data);
-        });
+        const storedAccounts = JSON.parse(localStorage.getItem('accounts'));
+        setAccounts(storedAccounts);
+        setFilteredAccounts(storedAccounts);
     };
 
     const handleCancel = () => {
@@ -79,10 +75,9 @@ const AccountList = () => {
 
     const handleCreateSuccess = () => {
         setIsCreateModalVisible(false);
-        axios.get('http://localhost:5000/accounts').then((response) => {
-            setAccounts(response.data);
-            setFilteredAccounts(response.data);
-        });
+        const storedAccounts = JSON.parse(localStorage.getItem('accounts'));
+        setAccounts(storedAccounts);
+        setFilteredAccounts(storedAccounts);
     };
 
     const columns = [
@@ -146,7 +141,7 @@ const AccountList = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 style={{ marginBottom: 16 }}
             />
-            <Table columns={columns} dataSource={filteredAccounts} rowKey="id" />
+            <Table columns={columns} dataSource={filteredAccounts} rowKey="id" pagination={{ pageSize: 7 }} />
             <Modal
                 title="Edit Account"
                 visible={isEditModalVisible}

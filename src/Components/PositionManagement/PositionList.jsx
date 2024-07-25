@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Space, Tag, Modal, message } from 'antd';
-import axios from 'axios';
+import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import PositionEdit from './PositionEdit';
 import PositionCreate from './PositionCreate';
 
 const { Search } = Input;
-const { confirm } = Modal;
 
 const PositionList = () => {
     const [positions, setPositions] = useState([]);
     const [filteredPositions, setFilteredPositions] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [editVisible, setEditVisible] = useState(false);
-    const [createVisible, setCreateVisible] = useState(false);
-    const [currentPositionId, setCurrentPositionId] = useState(null);
+    const [editingPosition, setEditingPosition] = useState(null);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
     useEffect(() => {
-        const fetchPositions = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/positions');
-                setPositions(response.data);
-                setFilteredPositions(response.data);
-            } catch (error) {
-                console.error('Error fetching positions:', error);
+        const fetchPositions = () => {
+            const storedPositions = localStorage.getItem('positions');
+            if (storedPositions) {
+                const parsedPositions = JSON.parse(storedPositions);
+                setPositions(parsedPositions);
+                setFilteredPositions(parsedPositions);
             }
         };
 
@@ -30,62 +28,56 @@ const PositionList = () => {
     }, []);
 
     useEffect(() => {
-        const results = positions.filter(position =>
-            position.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            position.status.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredPositions(results);
+        if (positions.length > 0) {
+            const results = positions.filter(position =>
+                position.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                position.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                position.status.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredPositions(results);
+        }
     }, [searchTerm, positions]);
 
-    const handleEdit = (id) => {
-        setCurrentPositionId(id);
-        setEditVisible(true);
+    const savePositions = (positions) => {
+        localStorage.setItem('positions', JSON.stringify(positions));
+    };
+
+    const handleEdit = (record) => {
+        setEditingPosition(record);
+        setIsEditModalVisible(true);
+    };
+
+    const handleDelete = (record) => {
+        const updatedPositions = positions.filter(position => position.id !== record.id);
+        setPositions(updatedPositions);
+        setFilteredPositions(updatedPositions);
+        savePositions(updatedPositions);
+        message.success('Position deleted successfully');
     };
 
     const handleCreate = () => {
-        setCreateVisible(true);
+        setIsCreateModalVisible(true);
     };
 
     const handleUpdate = () => {
-        setEditVisible(false);
-        setCreateVisible(false);
-        // Fetch positions again to update the list
-        axios.get('http://localhost:5000/positions')
-            .then(response => setPositions(response.data))
-            .catch(error => console.error('Error fetching positions:', error));
+        setIsEditModalVisible(false);
+        setEditingPosition(null);
+        const storedPositions = JSON.parse(localStorage.getItem('positions'));
+        setPositions(storedPositions);
+        setFilteredPositions(storedPositions);
     };
 
-    const handleDelete = async (id) => {
-        try {
-            const position = positions.find(pos => pos.id === id);
-            if (position.status === 'Active') {
-                message.error('Only inactive positions can be deleted.');
-                return;
-            }
-
-            await axios.delete(`http://localhost:5000/positions/${id}`);
-            message.success('Position deleted successfully.');
-            // Update the positions list
-            const newPositions = positions.filter(pos => pos.id !== id);
-            setPositions(newPositions);
-            setFilteredPositions(newPositions);
-        } catch (error) {
-            console.error('Error deleting position:', error);
-            message.error('Failed to delete position.');
-        }
+    const handleCancel = () => {
+        setIsEditModalVisible(false);
+        setIsCreateModalVisible(false);
+        setEditingPosition(null);
     };
 
-    const showDeleteConfirm = (id) => {
-        confirm({
-            title: 'Are you sure delete this position?',
-            content: 'Deleted position information including: Name, Description, etc.',
-            okText: 'Yes',
-            okType: 'danger',
-            cancelText: 'No',
-            onOk() {
-                handleDelete(id);
-            },
-        });
+    const handleCreateSuccess = () => {
+        setIsCreateModalVisible(false);
+        const storedPositions = JSON.parse(localStorage.getItem('positions'));
+        setPositions(storedPositions);
+        setFilteredPositions(storedPositions);
     };
 
     const columns = [
@@ -115,8 +107,20 @@ const PositionList = () => {
             key: 'action',
             render: (text, record) => (
                 <Space size="middle">
-                    <Button type="link" onClick={() => handleEdit(record.id)}>Edit</Button>
-                    <Button type="link" danger onClick={() => showDeleteConfirm(record.id)}>Delete</Button>
+                    <Button
+                        type="primary"
+                        icon={<EditOutlined />}
+                        onClick={() => handleEdit(record)}
+                    >
+                        Edit
+                    </Button>
+                    <Button
+                        type="danger"
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDelete(record)}
+                    >
+                        Delete
+                    </Button>
                 </Space>
             ),
         },
@@ -124,7 +128,12 @@ const PositionList = () => {
 
     return (
         <div>
-            <Button type="primary" onClick={handleCreate} style={{ marginBottom: 16 }}>
+            <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreate}
+                style={{ marginBottom: 16 }}
+            >
                 Create Position
             </Button>
             <Search
@@ -132,18 +141,27 @@ const PositionList = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 style={{ marginBottom: 16 }}
             />
-            <Table columns={columns} dataSource={filteredPositions} rowKey="id" />
-            <PositionEdit
-                visible={editVisible}
-                onClose={() => setEditVisible(false)}
-                positionId={currentPositionId}
-                onUpdate={handleUpdate}
-            />
-            <PositionCreate
-                visible={createVisible}
-                onClose={() => setCreateVisible(false)}
-                onCreate={handleUpdate}
-            />
+            <Table columns={columns} dataSource={filteredPositions} rowKey="id" pagination={{ pageSize: 7 }} />
+            <Modal
+                title="Edit Position"
+                visible={isEditModalVisible}
+                footer={null}
+                onCancel={handleCancel}
+            >
+                <PositionEdit
+                    position={editingPosition}
+                    onUpdate={handleUpdate}
+                    onCancel={handleCancel}
+                />
+            </Modal>
+            <Modal
+                title="Create Position"
+                visible={isCreateModalVisible}
+                footer={null}
+                onCancel={handleCancel}
+            >
+                <PositionCreate onCreate={handleCreateSuccess} />
+            </Modal>
         </div>
     );
 };

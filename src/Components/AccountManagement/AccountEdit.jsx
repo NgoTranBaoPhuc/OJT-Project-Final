@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Select, message } from 'antd';
-import axios from 'axios';
 
 const { Option } = Select;
 
@@ -13,15 +12,14 @@ const AccountEdit = ({ account, onUpdate, onCancel }) => {
         }
     }, [account, form]);
 
-    const onFinish = async (values) => {
-        try {
-            await axios.put(`http://localhost:5000/accounts/${account.id}`, values);
-            message.success('Account updated successfully');
-            onUpdate();
-        } catch (error) {
-            console.error('Error updating account:', error);
-            message.error('Failed to update account');
-        }
+    const onFinish = (values) => {
+        const storedAccounts = JSON.parse(localStorage.getItem('accounts'));
+        const updatedAccounts = storedAccounts.map(acc =>
+            acc.id === account.id ? { ...acc, ...values } : acc
+        );
+        localStorage.setItem('accounts', JSON.stringify(updatedAccounts));
+        message.success('Account updated successfully');
+        onUpdate();
     };
 
     return (

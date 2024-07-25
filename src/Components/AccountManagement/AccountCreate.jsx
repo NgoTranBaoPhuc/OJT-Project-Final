@@ -1,27 +1,20 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
-import axios from 'axios';
 
 const AccountCreate = ({ onCreate }) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
 
-    const handleFinish = async (values) => {
+    const handleFinish = (values) => {
         setLoading(true);
-        try {
-            await axios.post('http://localhost:5000/accounts', {
-                ...values,
-                status: 'Active', // Set default status to Active
-            });
-            message.success('Account created successfully');
-            form.resetFields();
-            onCreate();
-        } catch (error) {
-            console.error('Error creating account:', error);
-            message.error('Failed to create account');
-        } finally {
-            setLoading(false);
-        }
+        const storedAccounts = JSON.parse(localStorage.getItem('accounts')) || [];
+        const newAccount = { ...values, status: 'Active', id: Date.now().toString() };
+        storedAccounts.push(newAccount);
+        localStorage.setItem('accounts', JSON.stringify(storedAccounts));
+        message.success('Account created successfully');
+        form.resetFields();
+        onCreate();
+        setLoading(false);
     };
 
     return (

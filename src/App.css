@@ -1,33 +1,22 @@
-html,
 body,
+html,
 #root {
   height: 100%;
   margin: 0;
 }
 
-
 .ant-layout {
-  display: flex;
+  height: 100%;
 }
 
-.ant-layout-sider {
-  width: 20%;
-  flex: 0 0 20%;
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-}
-
-.site-layout {
-  margin-left: 20%;
-  width: 80%;
+.ant-layout-content {
   display: flex;
   flex-direction: column;
-}
-
-.ant-layout-header,
-.ant-layout-content,
-.ant-layout-footer {
-  width: 100%;
+  justify-content: space-between;
+  width: 100vw;
+  /* Ensure the content takes the full viewport width */
+  padding: 0;
+  /* Remove any padding */
+  margin: 0;
+  /* Remove any margin */
 }

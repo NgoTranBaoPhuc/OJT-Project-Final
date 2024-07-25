@@ -1,58 +1,48 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Button, message } from 'antd';
-import axios from 'axios';
+import { Form, Input, Button, message } from 'antd';
 
-const PositionCreate = ({ visible, onClose, onCreate }) => {
+const PositionCreate = ({ onCreate }) => {
     const [form] = Form.useForm();
+    const [loading, setLoading] = useState(false);
 
-    const handleCreate = async () => {
-        try {
-            const values = await form.validateFields();
-            await axios.post('http://localhost:5000/positions', {
-                ...values,
-                status: 'Active', // Set the default status to Active
-            });
-            message.success('Position created successfully.');
-            onCreate();
-            onClose();
-            form.resetFields();
-        } catch (error) {
-            console.error('Error creating position:', error);
-            message.error('Failed to create position.');
-        }
+    const handleFinish = (values) => {
+        setLoading(true);
+        const storedPositions = JSON.parse(localStorage.getItem('positions')) || [];
+        const newPosition = { ...values, status: 'Active', id: Date.now().toString() };
+        storedPositions.push(newPosition);
+        localStorage.setItem('positions', JSON.stringify(storedPositions));
+        message.success('Position created successfully');
+        form.resetFields();
+        onCreate();
+        setLoading(false);
     };
 
     return (
-        <Modal
-            visible={visible}
-            title="Create a new position"
-            onCancel={onClose}
-            footer={[
-                <Button key="back" onClick={onClose}>
-                    Cancel
-                </Button>,
-                <Button key="submit" type="primary" onClick={handleCreate}>
-                    Create
-                </Button>,
-            ]}
+        <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleFinish}
         >
-            <Form form={form} layout="vertical" name="position_create_form">
-                <Form.Item
-                    name="name"
-                    label="Name"
-                    rules={[{ required: true, message: 'Please input the name of the position!' }]}
-                >
-                    <Input />
-                </Form.Item>
-                <Form.Item
-                    name="description"
-                    label="Description"
-                    rules={[{ required: true, message: 'Please input the description of the position!' }]}
-                >
-                    <Input />
-                </Form.Item>
-            </Form>
-        </Modal>
+            <Form.Item
+                name="name"
+                label="Name"
+                rules={[{ required: true, message: 'Please enter the name' }]}
+            >
+                <Input />
+            </Form.Item>
+            <Form.Item
+                name="description"
+                label="Description"
+                rules={[{ required: true, message: 'Please enter the description' }]}
+            >
+                <Input />
+            </Form.Item>
+            <Form.Item>
+                <Button type="primary" htmlType="submit" loading={loading}>
+                    Create Position
+                </Button>
+            </Form.Item>
+        </Form>
     );
 };
 
