@@ -1,0 +1,69 @@
+{
+  "accounts": [
+    {
+      "name": "Phuc Ngo",
+      "email": "alice.johnson@example.com",
+      "status": "Active",
+      "password": "123456",
+      "id": "3"
+    },
+    {
+      "id": "91ad",
+      "name": "ngotranbaophuc",
+      "email": "phuc@gmail.com",
+      "password": "123456",
+      "status": "Active"
+    },
+    {
+      "id": "76cd",
+      "name": "qưeqwe",
+      "email": "pppp@gmail.com",
+      "password": "123456",
+      "status": "Active"
+    }
+  ],
+  "positions": [
+    {
+      "name": "Software ",
+      "description": "Develops and maintains software applications.",
+      "status": "Active",
+      "id": "1"
+    },
+    {
+      "name": "Project Manager",
+      "description": "Oversees project development and ensures timely delivery.",
+      "status": "Active",
+      "id": "2"
+    },
+    {
+      "name": "UX ",
+      "description": "Designs user interfaces and improves user experience.",
+      "status": "Active",
+      "id": "3"
+    },
+    {
+      "id": "c1cb",
+      "name": "posiition",
+      "description": "hahahahaha",
+      "status": "Active"
+    },
+    {
+      "name": "UX hehehe",
+      "description": "Designs user interfaces and improves user experience.",
+      "status": "Inactive",
+      "id": "5"
+    },
+    {
+      "name": "UX ",
+      "description": "Designs user interfaces and improves user experience.",
+      "status": "Inactive",
+      "id": "6"
+    },
+    {
+      "name": "UX lalalala",
+      "description": "Designs user interfaces and improves user experience.",
+      "status": "Inactive",
+      "id": "7"
+    }
+  ]
+}
