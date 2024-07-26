@@ -6,6 +6,8 @@ import AccountList from '../Components/AccountManagement/AccountList';
 import PositionList from '../Components/PositionManagement/PositionList';
 import TechnologyList from '../Components/TechnologyManagement/TechnologyList';
 import ProgramingLanguageList from '../Components/ProgramingLanguageManagement/ProgramingLanguageList';
+import EmployeeList from '../Components/EmployeeManagement/EmployeeList';
+import EmployeeDetail from '../Components/EmployeeManagement/EmployeeDetail';
 
 const { Content } = Layout;
 
@@ -22,6 +24,8 @@ const Master = () => {
                                 <Route path="/positions" element={<PositionList />} />
                                 <Route path="/technologies" element={<TechnologyList />} />
                                 <Route path="/programming-languages" element={<ProgramingLanguageList />} />
+                                <Route path="/employee-management" element={<EmployeeList />} />
+                                <Route path="/employee-detail/:id" element={<EmployeeDetail />} />
                                 <Route path="*" element={<Navigate to="/accounts" replace />} />
                             </Routes>
                         </Space>
