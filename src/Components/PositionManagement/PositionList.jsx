@@ -186,35 +186,14 @@ const PositionList = () => {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-                <div style={{ padding: 8 }}>
-                    <TreeSelect
-                        treeData={statusFromStorage}
-                        value={selectedKeys}
-                        onChange={(value) => {
-                            setSelectedKeys(value);
-                            handleStatusFilter(value);
-                            confirm();
-                        }}
-                        treeCheckable
-                        showCheckedStrategy={TreeSelect.SHOW_PARENT}
-                        placeholder="Filter by status"
-                        style={{ width: 200 }}
-                    />
-                    <Button
-                        onClick={() => {
-                            clearFilters();
-                            setFilteredPositions(positions);
-                        }}
-                        style={{ width: 90, marginTop: 8 }}
-                    >
-                        Reset
-                    </Button>
-                </div>
-            ),
+            filters: [
+                { text: 'Active', value: 'Active' },
+                { text: 'Inactive', value: 'Inactive' },
+            ],
+            onFilter: (value, record) => record.status.indexOf(value) === 0,
             render: status => (
                 <Tag color={status === 'Active' ? 'green' : 'volcano'} key={status}>
-                    {status ? status.toUpperCase() : ''}
+                    {status.toUpperCase()}
                 </Tag>
             ),
         },
