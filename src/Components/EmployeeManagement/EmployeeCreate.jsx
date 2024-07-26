@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Select, message, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
+import { createNewEmployee } from '../../services/EmployeeService';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -17,11 +18,21 @@ const EmployeeCreate = ({ onCreate }) => {
     }, []);
 
     const handleFinish = (values) => {
+        if (!cvFile) {
+            message.error('Please upload a CV (PDF)');
+            return;
+        }
+
         setLoading(true);
-        const storedEmployees = JSON.parse(localStorage.getItem('employees')) || [];
-        const newEmployee = { ...values, id: Date.now().toString(), cv: cvFile };
-        storedEmployees.push(newEmployee);
-        localStorage.setItem('employees', JSON.stringify(storedEmployees));
+        createNewEmployee(
+            values.name,
+            values.position,
+            values.personalDetails,
+            values.phoneNumber,
+            values.email,
+            values.additionalData,
+            cvFile
+        );
         message.success('Employee created successfully');
         form.resetFields();
         setCvFile(null);

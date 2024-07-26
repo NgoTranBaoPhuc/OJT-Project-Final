@@ -1,8 +1,10 @@
+// services/EmployeeService.js
+
 export const viewEmployeeProfiles = () => {
     return JSON.parse(localStorage.getItem('employees')) || [];
 };
 
-export const createNewEmployee = (name, position, personalDetails, phoneNumber, email, additionalData) => {
+export const createNewEmployee = (name, position, personalDetails, phoneNumber, email, additionalData, cv) => {
     const employees = JSON.parse(localStorage.getItem('employees')) || [];
     const newEmployee = {
         id: Date.now().toString(),
@@ -12,6 +14,7 @@ export const createNewEmployee = (name, position, personalDetails, phoneNumber, 
         phoneNumber,
         email,
         additionalData,
+        cv,
         status: 'Active',
     };
     employees.push(newEmployee);
@@ -25,4 +28,9 @@ export const editEmployeeProfile = (id, updatedEmployee) => {
         employees[index] = { ...employees[index], ...updatedEmployee };
         localStorage.setItem('employees', JSON.stringify(employees));
     }
+};
+
+export const fetchEmployeeById = (id) => {
+    const employees = JSON.parse(localStorage.getItem('employees')) || [];
+    return employees.find(employee => employee.id === id);
 };

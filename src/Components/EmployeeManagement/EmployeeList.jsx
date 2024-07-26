@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, message } from 'antd';
+import { Table, Button, Space, Modal, message } from 'antd'; // Added Modal import
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import EmployeeCreate from './EmployeeCreate';
 import EmployeeEdit from './EmployeeEdit';
-import EmployeeDetail from './EmployeeDetail';
 import * as XLSX from 'xlsx';
 
 const EmployeeList = () => {
@@ -11,10 +11,9 @@ const EmployeeList = () => {
     const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingEmployee, setEditingEmployee] = useState(null);
-    const [viewingEmployee, setViewingEmployee] = useState(null);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-    const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchEmployees = () => {
@@ -70,9 +69,6 @@ const EmployeeList = () => {
     const handleCancel = () => {
         setIsEditModalVisible(false);
         setIsCreateModalVisible(false);
-        setIsDetailModalVisible(false);
-        setEditingEmployee(null);
-        setViewingEmployee(null);
     };
 
     const handleCreateSuccess = () => {
@@ -83,8 +79,7 @@ const EmployeeList = () => {
     };
 
     const handleView = (record) => {
-        setViewingEmployee(record);
-        setIsDetailModalVisible(true);
+        navigate(`/employee-detail/${record.id}`);
     };
 
     const exportToExcel = () => {
@@ -188,14 +183,6 @@ const EmployeeList = () => {
                 onCancel={handleCancel}
             >
                 <EmployeeCreate onCreate={handleCreateSuccess} />
-            </Modal>
-            <Modal
-                title="Employee Detail"
-                visible={isDetailModalVisible}
-                footer={null}
-                onCancel={handleCancel}
-            >
-                <EmployeeDetail employee={viewingEmployee} />
             </Modal>
         </div>
     );

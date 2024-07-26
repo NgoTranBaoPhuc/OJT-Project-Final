@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Select, message, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
+import { editEmployeeProfile } from '../../services/EmployeeService';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -20,11 +21,8 @@ const EmployeeEdit = ({ employee, onUpdate, onCancel }) => {
     }, [employee, form]);
 
     const handleFinish = (values) => {
-        const storedEmployees = JSON.parse(localStorage.getItem('employees')) || [];
-        const updatedEmployees = storedEmployees.map(emp =>
-            emp.id === employee.id ? { ...emp, ...values, cv: cvFile } : emp
-        );
-        localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+        const updatedEmployee = { ...values, cv: cvFile };
+        editEmployeeProfile(employee.id, updatedEmployee);
         message.success('Employee updated successfully');
         onUpdate();
     };
