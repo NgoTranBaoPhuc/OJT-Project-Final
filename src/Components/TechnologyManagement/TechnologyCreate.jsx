@@ -1,39 +1,55 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Select, Switch, message } from 'antd';
 
 const { Option } = Select;
+const { TextArea } = Input;
 
-const TechnologyCreate = ({ onCreate }) => {
+const TechnologyCreate = ({ onCreate, onTagsChange }) => {
     const [form] = Form.useForm();
-    const [selectedTags, setSelectedTags] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [isActive, setIsActive] = useState(true);
+    const [tags, setTags] = useState([]);
+
+    useEffect(() => {
+        const fetchTags = () => {
+            const storedTags = JSON.parse(localStorage.getItem('technologyTags')) || [];
+            setTags(storedTags);
+        };
+        fetchTags();
+    }, []);
+
+    useEffect(() => {
+        const storedTags = JSON.parse(localStorage.getItem('technologyTags')) || [];
+        setTags(storedTags);
+    }, [onTagsChange]);
 
     const handleFinish = (values) => {
-        if (selectedTags.length === 0) {
-            message.error('Please select at least one tag');
+        const currentTags = form.getFieldValue('tags') || [];
+        if (currentTags.length === 0) {
+            message.error('Please select at least one tag.');
+            return;
+        }
+        if (currentTags.length > 3) {
+            message.error('You can select up to 3 tags only.');
             return;
         }
         setLoading(true);
         const storedTechnologies = JSON.parse(localStorage.getItem('technologies')) || [];
-        const newTechnology = { ...values, tags: selectedTags, id: Date.now().toString(), status: isActive ? 'Active' : 'Inactive' };
+        const newTechnology = { ...values, tags: currentTags, id: Date.now().toString() };
         storedTechnologies.push(newTechnology);
         localStorage.setItem('technologies', JSON.stringify(storedTechnologies));
+
+        // Update tags in localStorage
+        const storedTags = JSON.parse(localStorage.getItem('technologyTags')) || [];
+        const updatedTags = Array.from(new Set([...storedTags, ...currentTags]));
+        localStorage.setItem('technologyTags', JSON.stringify(updatedTags));
+
+        // Call onTagsChange to update tags in TechnologyList
+        onTagsChange(updatedTags);
+
         message.success('Technology created successfully');
         form.resetFields();
-        setSelectedTags([]);
-        setIsActive(true);
         onCreate();
         setLoading(false);
-    };
-
-    const handleTagChange = (tags) => {
-        if (tags.length > 3) {
-            message.error('You can select up to 3 tags');
-        } else {
-            setSelectedTags(tags);
-        }
     };
 
     return (
@@ -54,66 +70,25 @@ const TechnologyCreate = ({ onCreate }) => {
                 label="Description"
                 rules={[{ required: true, message: 'Please enter the description' }]}
             >
-                <Input.TextArea />
+                <TextArea rows={4} />
             </Form.Item>
             <Form.Item
                 name="tags"
                 label="Tags"
-                rules={[
-                    { required: true, message: 'Please select at least one tag!' },
-                    () => ({
-                        validator(_, value) {
-                            if (value && value.length <= 3) {
-                                return Promise.resolve();
-                            }
-                            return Promise.reject('You can select up to 3 tags!');
-                        },
-                    }),
-                ]}
             >
-                <Select
-                    mode="multiple"
-                    placeholder="Select tags"
-                    value={selectedTags}
-                    onChange={handleTagChange}
-                >
-                    {[
-                        'React Native',
-                        'Flutter',
-                        'Ionic',
-                        'Cordova',
-                        'MySQL',
-                        'Postgres',
-                        'SQLite',
-                        'Neo4J',
-                        'Amazon (AWS)',
-                        'Google (Google Cloud Platform, Firebase)',
-                        'Microsoft (Azure)'
-                    ].map(tag => (
-                        <Option key={tag} value={tag}>
-                            {tag}
-                        </Option>
+                <Select mode="tags">
+                    {tags.map(tag => (
+                        <Option key={tag} value={tag}>{tag}</Option>
                     ))}
                 </Select>
             </Form.Item>
-            <Form.Item
-                name="status"
-                label="Status"
-            // valuePropName="checked"
-            >
-                <Switch checkedChildren="Active" unCheckedChildren="Inactive" checked={isActive} onChange={setIsActive} />
-            </Form.Item>
             <Form.Item>
-                <Button type="primary" htmlType="submit" loading={loading} disabled={selectedTags.length > 3}>
+                <Button type="primary" htmlType="submit" loading={loading}>
                     Create Technology
                 </Button>
             </Form.Item>
         </Form>
     );
-};
-
-TechnologyCreate.propTypes = {
-    onCreate: PropTypes.func.isRequired
 };
 
 export default TechnologyCreate;

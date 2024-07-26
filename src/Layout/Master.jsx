@@ -15,7 +15,7 @@ const Master = () => {
             <Layout style={{ display: 'flex', minHeight: '100vh', background: '#fff' }}>
                 <Sidebar />
                 <Layout style={{ marginLeft: 200, width: 'calc(100% - 200px)', background: '#fff' }}>
-                    <Content style={{ margin: '30px 90px ', background: '#fff', minHeight: 280 }}>
+                    <Content style={{ margin: '30px ', background: '#fff', minHeight: 280 }}>
                         <Space direction="vertical" size="large">
                             <Routes>
                                 <Route path="/accounts" element={<AccountList />} />

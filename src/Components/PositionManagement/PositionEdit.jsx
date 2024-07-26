@@ -17,18 +17,27 @@ const PositionEdit = ({ position, onUpdate, onCancel }) => {
         }
     }, [position, form]);
 
+    useEffect(() => {
+        const fetchTags = () => {
+            const storedTags = JSON.parse(localStorage.getItem('positionTags')) || [];
+            setTags(storedTags);
+        };
+        fetchTags();
+    }, []);
+
     const onFinish = (values) => {
-        if (tags.length === 0) {
+        const currentTags = form.getFieldValue('tags') || [];
+        if (currentTags.length === 0) {
             message.error('Please select at least one tag.');
             return;
         }
-        if (tags.length > 3) {
+        if (currentTags.length > 3) {
             message.error('You can select up to 3 tags only.');
             return;
         }
         const storedPositions = JSON.parse(localStorage.getItem('positions'));
         const updatedPositions = storedPositions.map(pos =>
-            pos.id === position.id ? { ...pos, ...values, tags, status: isActive ? 'Active' : 'Inactive' } : pos
+            pos.id === position.id ? { ...pos, ...values, tags: currentTags, status: isActive ? 'Active' : 'Inactive' } : pos
         );
         localStorage.setItem('positions', JSON.stringify(updatedPositions));
         message.success('Position updated successfully');
@@ -64,11 +73,9 @@ const PositionEdit = ({ position, onUpdate, onCancel }) => {
                 label="Tags"
             >
                 <Select mode="tags" value={tags} onChange={handleTagChange}>
-                    <Option value="C#">C#</Option>
-                    <Option value="C++">C++</Option>
-                    <Option value="JavaScript">JavaScript</Option>
-                    <Option value="Python">Python</Option>
-                    <Option value="Java">Java</Option>
+                    {tags.map(tag => (
+                        <Option key={tag} value={tag}>{tag}</Option>
+                    ))}
                 </Select>
             </Form.Item>
             <Form.Item

@@ -1,48 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { Form, Input, Button, Select, Switch, message } from 'antd';
+import { Form, Input, Button, Select, message } from 'antd';
 
 const { Option } = Select;
-
-const tagsOptions = [
-    'React Native', 'Flutter', 'Ionic', 'Cordova',
-    'MySQL', 'Postgres', 'SQLite', 'Neo4J',
-    'Amazon (AWS)', 'Google (Google Cloud Platform, Firebase)', 'Microsoft (Azure)'
-];
+const { TextArea } = Input;
 
 const TechnologyEdit = ({ technology, onUpdate, onCancel }) => {
     const [form] = Form.useForm();
+    const [allTags, setAllTags] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
-    const [isActive, setIsActive] = useState(true);
+
+    useEffect(() => {
+        const fetchTags = () => {
+            const storedTags = JSON.parse(localStorage.getItem('technologyTags')) || [];
+            setAllTags(storedTags);
+        };
+        fetchTags();
+    }, []);
 
     useEffect(() => {
         if (technology) {
             form.setFieldsValue(technology);
             setSelectedTags(technology.tags || []);
-            setIsActive(technology.status === 'Active');
         }
     }, [technology, form]);
 
     const onFinish = (values) => {
-        if (selectedTags.length > 3) {
-            message.error('You can only select up to 3 tags');
+        const currentTags = form.getFieldValue('tags') || [];
+        if (currentTags.length === 0) {
+            message.error('Please select at least one tag.');
+            return;
+        }
+        if (currentTags.length > 3) {
+            message.error('You can select up to 3 tags only.');
             return;
         }
         const storedTechnologies = JSON.parse(localStorage.getItem('technologies'));
         const updatedTechnologies = storedTechnologies.map(tech =>
-            tech.id === technology.id ? { ...tech, ...values, tags: selectedTags, status: isActive ? 'Active' : 'Inactive' } : tech
+            tech.id === technology.id ? { ...tech, ...values, tags: currentTags } : tech
         );
         localStorage.setItem('technologies', JSON.stringify(updatedTechnologies));
         message.success('Technology updated successfully');
         onUpdate();
     };
 
-    const handleTagChange = (tags) => {
-        if (tags.length > 3) {
-            message.error('You can select up to 3 tags');
-        } else {
-            setSelectedTags(tags);
-        }
+    const handleTagChange = (value) => {
+        setSelectedTags(value);
     };
 
     return (
@@ -63,36 +65,17 @@ const TechnologyEdit = ({ technology, onUpdate, onCancel }) => {
                 label="Description"
                 rules={[{ required: true, message: 'Please input the description!' }]}
             >
-                <Input.TextArea rows={4} />
+                <TextArea rows={4} />
             </Form.Item>
             <Form.Item
                 name="tags"
                 label="Tags"
-                rules={[{ required: true, message: 'Please select at least one tag!' }]}
             >
-                <Select
-                    mode="multiple"
-                    value={selectedTags}
-                    onChange={handleTagChange}
-                >
-                    {tagsOptions.map(tag => (
-                        <Option key={tag} value={tag}>
-                            {tag}
-                        </Option>
+                <Select mode="tags" value={selectedTags} onChange={handleTagChange}>
+                    {allTags.map(tag => (
+                        <Option key={tag} value={tag}>{tag}</Option>
                     ))}
                 </Select>
-            </Form.Item>
-            <Form.Item
-                name="status"
-                label="Status"
-                valuePropName="checked"
-            >
-                <Switch
-                    checkedChildren="Active"
-                    unCheckedChildren="Inactive"
-                    checked={isActive}
-                    onChange={setIsActive}
-                />
             </Form.Item>
             <Form.Item>
                 <Button type="primary" htmlType="submit">
@@ -104,18 +87,6 @@ const TechnologyEdit = ({ technology, onUpdate, onCancel }) => {
             </Form.Item>
         </Form>
     );
-};
-
-TechnologyEdit.propTypes = {
-    technology: PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        description: PropTypes.string,
-        tags: PropTypes.arrayOf(PropTypes.string),
-        status: PropTypes.string
-    }),
-    onUpdate: PropTypes.func.isRequired,
-    onCancel: PropTypes.func.isRequired
 };
 
 export default TechnologyEdit;

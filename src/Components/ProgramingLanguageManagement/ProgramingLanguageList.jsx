@@ -13,10 +13,11 @@ const ProgramingLanguageList = () => {
     const [editingLanguage, setEditingLanguage] = useState(null);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+    const [tagsFromStorage, setTagsFromStorage] = useState([]);
 
     useEffect(() => {
         const fetchLanguages = () => {
-            const storedLanguages = localStorage.getItem('languages');
+            const storedLanguages = localStorage.getItem('programingLanguages');
             if (storedLanguages) {
                 const parsedLanguages = JSON.parse(storedLanguages);
                 setLanguages(parsedLanguages);
@@ -24,21 +25,33 @@ const ProgramingLanguageList = () => {
             }
         };
 
+        const fetchTags = () => {
+            const storedTags = localStorage.getItem('programingLanguageTags');
+            if (storedTags) {
+                const parsedTags = JSON.parse(storedTags);
+                setTagsFromStorage(parsedTags.map(tag => ({ title: tag, value: tag })));
+            }
+        };
+
         fetchLanguages();
+        fetchTags();
     }, []);
 
     useEffect(() => {
-        if (languages.length > 0) {
-            const results = languages.filter(language =>
-                language.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (language.tags && language.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-            );
-            setFilteredLanguages(results);
-        }
+        const results = languages.filter(language =>
+            language.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            language.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (language.tags && language.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+        );
+        setFilteredLanguages(results);
     }, [searchTerm, languages]);
 
+    const updateTags = (updatedTags) => {
+        setTagsFromStorage(updatedTags.map(tag => ({ title: tag, value: tag })));
+    };
+
     const saveLanguages = (languages) => {
-        localStorage.setItem('languages', JSON.stringify(languages));
+        localStorage.setItem('programingLanguages', JSON.stringify(languages));
     };
 
     const handleEdit = (record) => {
@@ -61,7 +74,7 @@ const ProgramingLanguageList = () => {
     const handleUpdate = () => {
         setIsEditModalVisible(false);
         setEditingLanguage(null);
-        const storedLanguages = JSON.parse(localStorage.getItem('languages'));
+        const storedLanguages = JSON.parse(localStorage.getItem('programingLanguages'));
         setLanguages(storedLanguages);
         setFilteredLanguages(storedLanguages);
     };
@@ -74,7 +87,7 @@ const ProgramingLanguageList = () => {
 
     const handleCreateSuccess = () => {
         setIsCreateModalVisible(false);
-        const storedLanguages = JSON.parse(localStorage.getItem('languages'));
+        const storedLanguages = JSON.parse(localStorage.getItem('programingLanguages'));
         setLanguages(storedLanguages);
         setFilteredLanguages(storedLanguages);
     };
@@ -88,17 +101,6 @@ const ProgramingLanguageList = () => {
         if (value.length > 0) {
             const filtered = languages.filter(language =>
                 language.tags.some(tag => value.includes(tag))
-            );
-            setFilteredLanguages(filtered);
-        } else {
-            setFilteredLanguages(languages);
-        }
-    };
-
-    const handleStatusFilter = (value) => {
-        if (value.length > 0) {
-            const filtered = languages.filter(language =>
-                value.includes(language.status)
             );
             setFilteredLanguages(filtered);
         } else {
@@ -125,19 +127,7 @@ const ProgramingLanguageList = () => {
             filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                 <div style={{ padding: 8 }}>
                     <TreeSelect
-                        treeData={[
-                            { title: 'C#', value: 'C#' },
-                            { title: 'C++', value: 'C++' },
-                            { title: 'JavaScript', value: 'JavaScript' },
-                            { title: 'Python', value: 'Python' },
-                            { title: 'Java', value: 'Java' },
-                            { title: 'Ruby', value: 'Ruby' },
-                            { title: 'Go', value: 'Go' },
-                            { title: 'Swift', value: 'Swift' },
-                            { title: 'Kotlin', value: 'Kotlin' },
-                            { title: 'Rust', value: 'Rust' },
-                            { title: 'TypeScript', value: 'TypeScript' },
-                        ]}
+                        treeData={tagsFromStorage}
                         value={selectedKeys}
                         onChange={(value) => {
                             setSelectedKeys(value);
@@ -162,51 +152,12 @@ const ProgramingLanguageList = () => {
             ),
             render: tags => (
                 <>
-                    {tags.map(tag => (
+                    {tags && tags.map(tag => (
                         <Tag color={getRandomColor()} key={tag}>
                             {tag.toUpperCase()}
                         </Tag>
                     ))}
                 </>
-            ),
-        },
-        {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-                <div style={{ padding: 8 }}>
-                    <TreeSelect
-                        treeData={[
-                            { title: 'Active', value: 'Active' },
-                            { title: 'Inactive', value: 'Inactive' }
-                        ]}
-                        value={selectedKeys}
-                        onChange={(value) => {
-                            setSelectedKeys(value);
-                            handleStatusFilter(value);
-                            confirm();
-                        }}
-                        treeCheckable
-                        showCheckedStrategy={TreeSelect.SHOW_PARENT}
-                        placeholder="Filter by status"
-                        style={{ width: 200 }}
-                    />
-                    <Button
-                        onClick={() => {
-                            clearFilters();
-                            setFilteredLanguages(languages);
-                        }}
-                        style={{ width: 90, marginTop: 8 }}
-                    >
-                        Reset
-                    </Button>
-                </div>
-            ),
-            render: status => (
-                <Tag color={status && status.toLowerCase() === 'active' ? 'green' : 'volcano'} key={status}>
-                    {status ? status.toUpperCase() : ''}
-                </Tag>
             ),
         },
         {
@@ -267,7 +218,7 @@ const ProgramingLanguageList = () => {
                 footer={null}
                 onCancel={handleCancel}
             >
-                <ProgramingLanguageCreate onCreate={handleCreateSuccess} />
+                <ProgramingLanguageCreate onCreate={handleCreateSuccess} onTagsChange={updateTags} />
             </Modal>
         </div>
     );

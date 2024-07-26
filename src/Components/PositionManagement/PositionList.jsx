@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Space, Tag, Modal, message } from 'antd';
+import { Table, Input, Button, Space, Tag, Modal, message, TreeSelect } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import PositionEdit from './PositionEdit';
 import PositionCreate from './PositionCreate';
@@ -13,6 +13,8 @@ const PositionList = () => {
     const [editingPosition, setEditingPosition] = useState(null);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+    const [tagsFromStorage, setTagsFromStorage] = useState([]);
+    const [statusFromStorage, setStatusFromStorage] = useState([]);
 
     useEffect(() => {
         const fetchPositions = () => {
@@ -24,19 +26,40 @@ const PositionList = () => {
             }
         };
 
+        const fetchTags = () => {
+            const storedTags = localStorage.getItem('positionTags');
+            if (storedTags) {
+                const parsedTags = JSON.parse(storedTags);
+                setTagsFromStorage(parsedTags.map(tag => ({ title: tag, value: tag })));
+            }
+        };
+
+        const fetchStatus = () => {
+            const storedStatus = localStorage.getItem('positionStatus');
+            if (storedStatus) {
+                const parsedStatus = JSON.parse(storedStatus);
+                setStatusFromStorage(parsedStatus.map(status => ({ title: status, value: status })));
+            }
+        };
+
         fetchPositions();
+        fetchTags();
+        fetchStatus();
     }, []);
 
     useEffect(() => {
-        if (positions.length > 0) {
-            const results = positions.filter(position =>
-                position.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                position.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (position.tags && position.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-            );
-            setFilteredPositions(results);
-        }
+        const results = positions.filter(position =>
+            position.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            position.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (position.tags && position.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+        );
+        setFilteredPositions(results);
     }, [searchTerm, positions]);
+
+    const updateTags = (updatedTags) => {
+        console.log('Updated Tags:', updatedTags); // Kiểm tra giá trị thẻ được cập nhật
+        setTagsFromStorage(updatedTags.map(tag => ({ title: tag, value: tag })));
+    };
 
     const savePositions = (positions) => {
         localStorage.setItem('positions', JSON.stringify(positions));
@@ -85,14 +108,27 @@ const PositionList = () => {
         return colors[Math.floor(Math.random() * colors.length)];
     };
 
-    const tagFilters = [
-        'C#', 'C++', 'Python', 'JAVASCRIPT'
-    ].map(tag => ({ text: tag, value: tag }));
+    const handleTagFilter = (value) => {
+        if (value.length > 0) {
+            const filtered = positions.filter(position =>
+                position.tags.some(tag => value.includes(tag))
+            );
+            setFilteredPositions(filtered);
+        } else {
+            setFilteredPositions(positions);
+        }
+    };
 
-    const statusFilters = [
-        { text: 'Active', value: 'Active' },
-        { text: 'Inactive', value: 'Inactive' }
-    ];
+    const handleStatusFilter = (value) => {
+        if (value.length > 0) {
+            const filtered = positions.filter(position =>
+                value.includes(position.status)
+            );
+            setFilteredPositions(filtered);
+        } else {
+            setFilteredPositions(positions);
+        }
+    };
 
     const columns = [
         {
@@ -110,8 +146,32 @@ const PositionList = () => {
             title: 'Tags',
             dataIndex: 'tags',
             key: 'tags',
-            filters: tagFilters,
-            onFilter: (value, record) => record.tags.includes(value),
+            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                <div style={{ padding: 8 }}>
+                    <TreeSelect
+                        treeData={tagsFromStorage}
+                        value={selectedKeys}
+                        onChange={(value) => {
+                            setSelectedKeys(value);
+                            handleTagFilter(value);
+                            confirm();
+                        }}
+                        treeCheckable
+                        showCheckedStrategy={TreeSelect.SHOW_PARENT}
+                        placeholder="Filter by tags"
+                        style={{ width: 200 }}
+                    />
+                    <Button
+                        onClick={() => {
+                            clearFilters();
+                            setFilteredPositions(positions);
+                        }}
+                        style={{ width: 90, marginTop: 8 }}
+                    >
+                        Reset
+                    </Button>
+                </div>
+            ),
             render: tags => (
                 <>
                     {tags && tags.map(tag => (
@@ -126,8 +186,32 @@ const PositionList = () => {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            filters: statusFilters,
-            onFilter: (value, record) => record.status === value,
+            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                <div style={{ padding: 8 }}>
+                    <TreeSelect
+                        treeData={statusFromStorage}
+                        value={selectedKeys}
+                        onChange={(value) => {
+                            setSelectedKeys(value);
+                            handleStatusFilter(value);
+                            confirm();
+                        }}
+                        treeCheckable
+                        showCheckedStrategy={TreeSelect.SHOW_PARENT}
+                        placeholder="Filter by status"
+                        style={{ width: 200 }}
+                    />
+                    <Button
+                        onClick={() => {
+                            clearFilters();
+                            setFilteredPositions(positions);
+                        }}
+                        style={{ width: 90, marginTop: 8 }}
+                    >
+                        Reset
+                    </Button>
+                </div>
+            ),
             render: status => (
                 <Tag color={status === 'Active' ? 'green' : 'volcano'} key={status}>
                     {status ? status.toUpperCase() : ''}
@@ -192,7 +276,7 @@ const PositionList = () => {
                 footer={null}
                 onCancel={handleCancel}
             >
-                <PositionCreate onCreate={handleCreateSuccess} />
+                <PositionCreate onCreate={handleCreateSuccess} onTagsChange={updateTags} />
             </Modal>
         </div>
     );

@@ -1,38 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Select, Switch, message } from 'antd';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const ProgramingLanguageCreate = ({ onCreate }) => {
+const ProgramingLanguageCreate = ({ onCreate, onTagsChange }) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [tags, setTags] = useState([]);
-    const [isActive, setIsActive] = useState(true);
+
+    useEffect(() => {
+        const fetchTags = () => {
+            const storedTags = JSON.parse(localStorage.getItem('programingLanguageTags')) || [];
+            setTags(storedTags);
+        };
+        fetchTags();
+    }, []);
+
+    useEffect(() => {
+        const storedTags = JSON.parse(localStorage.getItem('programingLanguageTags')) || [];
+        setTags(storedTags);
+    }, [onTagsChange]);
 
     const handleFinish = (values) => {
-        if (tags.length === 0) {
+        const currentTags = form.getFieldValue('tags') || [];
+        if (currentTags.length === 0) {
             message.error('Please select at least one tag.');
             return;
         }
-        if (tags.length > 3) {
+        if (currentTags.length > 3) {
             message.error('You can select up to 3 tags only.');
             return;
         }
         setLoading(true);
-        const storedLanguages = JSON.parse(localStorage.getItem('languages')) || [];
-        const newLanguage = { ...values, tags, id: Date.now().toString(), status: isActive ? 'Active' : 'Inactive' };
+        const storedLanguages = JSON.parse(localStorage.getItem('programingLanguages')) || [];
+        const newLanguage = { ...values, tags: currentTags, id: Date.now().toString() };
         storedLanguages.push(newLanguage);
-        localStorage.setItem('languages', JSON.stringify(storedLanguages));
+        localStorage.setItem('programingLanguages', JSON.stringify(storedLanguages));
+
+        // Update tags in localStorage
+        const storedTags = JSON.parse(localStorage.getItem('programingLanguageTags')) || [];
+        const updatedTags = Array.from(new Set([...storedTags, ...currentTags]));
+        localStorage.setItem('programingLanguageTags', JSON.stringify(updatedTags));
+
+        // Call onTagsChange to update tags in ProgramingLanguageList
+        onTagsChange(updatedTags);
+
         message.success('Programing language created successfully');
         form.resetFields();
-        setTags([]);
         onCreate();
         setLoading(false);
-    };
-
-    const handleTagChange = (value) => {
-        setTags(value);
     };
 
     return (
@@ -59,25 +76,11 @@ const ProgramingLanguageCreate = ({ onCreate }) => {
                 name="tags"
                 label="Tags"
             >
-                <Select mode="tags" value={tags} onChange={handleTagChange}>
-                    <Option value="C#">C#</Option>
-                    <Option value="C++">C++</Option>
-                    <Option value="JavaScript">JavaScript</Option>
-                    <Option value="Python">Python</Option>
-                    <Option value="Java">Java</Option>
-                    <Option value="Ruby">Ruby</Option>
-                    <Option value="Go">Go</Option>
-                    <Option value="Swift">Swift</Option>
-                    <Option value="Kotlin">Kotlin</Option>
-                    <Option value="Rust">Rust</Option>
-                    <Option value="TypeScript">TypeScript</Option>
+                <Select mode="tags">
+                    {tags.map(tag => (
+                        <Option key={tag} value={tag}>{tag}</Option>
+                    ))}
                 </Select>
-            </Form.Item>
-            <Form.Item
-                name="status"
-                label="Status"
-            >
-                <Switch checkedChildren="Active" unCheckedChildren="Inactive" checked={isActive} onChange={setIsActive} />
             </Form.Item>
             <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>

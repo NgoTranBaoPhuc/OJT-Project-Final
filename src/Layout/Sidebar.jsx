@@ -27,7 +27,7 @@ const Sidebar = () => {
                 {
                     key: '4',
                     icon: <CodeOutlined />,
-                    label: <Link to="/programming-languages">Programing Languages</Link>,
+                    label: <Link to="/programming-languages">Programing </Link>,
                 },
             ]}>
             </Menu>
